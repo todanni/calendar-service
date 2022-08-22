@@ -73,9 +73,11 @@ jobs:
           GITHUB_USERNAME: danni-popova
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ## Traefik labels
-          HOST_LABEL: traefik.http.routers.${{ github.event.repository.name }}.rule=Host(`${{ secrets.DEV_HOSTNAME }}`) && PathPrefix(`/api/${{ github.event.repository.name }}`)
-          TLS_LABEL: traefik.http.routers.${{ github.event.repository.name }}.tls=true
-          CERT_LABEL: traefik.http.routers.${{ github.event.repository.name }}.tls.certresolver=letsencrypt
+          HOST_LABEL: traefik.http.routers.${{ github.event.repository.name }}.rule=Host(`${{ secrets.DEV_HOSTNAME }}`) && PathPrefix(`/`)
+          MIDDLEWARE_LABEL: traefik.http.routers.${{ github.event.repository.name }}.middlewares=https-redirect@docker
+          TLS_HOST_LABEL: traefik.http.routers.${{ github.event.repository.name }}-tls.rule=Host(`${{ secrets.DEV_HOSTNAME }}`) && PathPrefix(`/api/calendar`)
+          TLS_CERT_LABEL: traefik.http.routers.${{ github.event.repository.name }}-tls.tls.certresolver=letsencrypt
+          TLS_LABEL: traefik.http.routers.${{ github.event.repository.name }}-tls.tls=true
           
        with:
         host: ${{ secrets.DEV_DO_DROPLET_IP }}
