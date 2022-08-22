@@ -1,0 +1,26 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+/.idea/dataSources.xml
+/.idea/dataSources/fc393d18-4335-4cc5-9d2c-5f0880225069.xml
+/.idea/dataSources/fc393d18-4335-4cc5-9d2c-5f0880225069/storage_v2/_src_/database/postgres.edMnLQ.meta
+/.idea/dataSources/fc393d18-4335-4cc5-9d2c-5f0880225069/storage_v2/_src_/database/postgres.edMnLQ/schema/information_schema.FNRwLQ.meta
+/.idea/dataSources/fc393d18-4335-4cc5-9d2c-5f0880225069/storage_v2/_src_/database/postgres.edMnLQ/schema/pg_catalog.0S1ZNQ.meta
+/.idea/dataSources/fc393d18-4335-4cc5-9d2c-5f0880225069/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta
+/.idea/dataSources/fc393d18-4335-4cc5-9d2c-5f0880225069/storage_v2/_src_/database/todanni.cbdruw.meta
+/.idea/dataSources/fc393d18-4335-4cc5-9d2c-5f0880225069/storage_v2/_src_/database/todanni.cbdruw/schema/information_schema.FNRwLQ.meta
+/.idea/dataSources/fc393d18-4335-4cc5-9d2c-5f0880225069/storage_v2/_src_/database/todanni.cbdruw/schema/pg_catalog.0S1ZNQ.meta
+/.idea/discord.xml

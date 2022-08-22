@@ -1,0 +1,59 @@
+name: Template - deploy to production
+
+## This action runs when a release is published
+## and uses SSH to run the latest Docker image for the repository
+## on the Production machine specified in the org secrets
+on:
+  release:
+    types: [published]
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+        ## Run
+      -
+        name: Run
+        uses: appleboy/ssh-action@master
+        env:
+          GITHUB_USERNAME: danni-popova
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ## Traefik labels
+          HOST_LABEL: traefik.http.routers.${{ github.event.repository.name }}.rule=Host(`${{ secrets.PROD_HOSTNAME }}`) && PathPrefix(`/api/${{ github.event.repository.name }}`)
+          TLS_LABEL: traefik.http.routers.${{ github.event.repository.name }}.tls=true
+          CERT_LABEL: traefik.http.routers.${{ github.event.repository.name }}.tls.certresolver=letsencrypt
+
+        with:
+          host: ${{ secrets.PROD_DO_DROPLET_IP }}
+          username: root
+          key: ${{ secrets.ADMIN_SSH_KEY }}
+          envs:  HOST_LABEL,CERT_LABEL,TLS_LABEL
+          script: |
+            docker login -u ${{ secrets.DOCKER_USERNAME }} -p "${{ secrets.DOCKER_PASSWORD }}"
+            docker pull ${{ github.repository }}:latest
+            docker rm -f ${{ github.event.repository.name }}
+            docker run -d --name ${{ github.event.repository.name }} --network ${{ secrets.NETWORK }} --label "$HOST_LABEL" --label "$TLS_LABEL" --label "$CERT_LABEL" --env-file ./build/.env  ${{ github.repository }}
+      -
+        name: Send discord failure message
+        if: ${{ failure() }}
+        uses: appleboy/discord-action@master
+        with:
+          webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
+          webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
+          color: "#FF0000"
+          message: "Failed to run the latest images in Production for ${{ github.repository }} \n https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id}}"
+
+      -
+        name: Send discord success message
+        if: ${{ success() }}
+        uses: appleboy/discord-action@master
+        with:
+          webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
+          webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
+          color: "#48f442"
+          message: "Production is now running latest images for ${{ github.repository }}. \n https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id}}"
+
