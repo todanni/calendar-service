@@ -1,6 +1,7 @@
 package main
 
 import (
+	b64 "encoding/base64"
 	"log"
 	"net/http"
 	"os"
@@ -32,7 +33,9 @@ func main() {
 	vaultClient.SetToken(os.Getenv("VAULT_TOKEN"))
 
 	googleCredentials := os.Getenv("GOOGLE_CREDENTIALS")
-	config, err := google.ConfigFromJSON([]byte(googleCredentials), calendar.CalendarReadonlyScope)
+	decodedCredentials, err := b64.StdEncoding.DecodeString(googleCredentials)
+
+	config, err := google.ConfigFromJSON([]byte(decodedCredentials), calendar.CalendarReadonlyScope)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
