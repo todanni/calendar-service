@@ -91,7 +91,7 @@ jobs:
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p "${{ secrets.DOCKER_PASSWORD }}"
           docker pull ${{ github.repository }}:latest
           docker rm -f ${{ github.event.repository.name }} 
-          docker run -d --name ${{ github.event.repository.name }} --network ${{ secrets.NETWORK }} --label "$HOST_LABEL" --label "$TLS_LABEL" --label "$CERT_LABEL" --env-file .env  ${{ github.repository }}
+          docker run -d --name ${{ github.event.repository.name }} --network ${{ secrets.NETWORK }} --label "$TLS_HOST_LABEL" --label "$TLS_LABEL" --label "$TLS_CERT_LABEL" --env-file .env  ${{ github.repository }}
       - 
         name: Send discord failure message
         if: ${{ failure() }}
