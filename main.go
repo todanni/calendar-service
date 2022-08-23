@@ -45,5 +45,5 @@ func main() {
 	services.NewCredentialsService(credentialsRepo, router, logger, config)
 	services.NewCalendarService(credentialsRepo, router, logger, config)
 
-	http.ListenAndServe("localhost:8083", router)
+	http.ListenAndServe(":8083", router)
 }
