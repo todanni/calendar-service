@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -55,20 +55,29 @@ func (c *calendarService) GetEvents(w http.ResponseWriter, r *http.Request) {
 	// TODO: We must validate the user's token in the future
 	// and extract the email from it
 	userEmail := "danni@todanni.com"
-	creds, err := c.repo.GetUserCredentials(context.Background(), userEmail)
+	creds, err := c.repo.GetUserCredentials(ctx, userEmail)
 	if err != nil {
 		// TODO: this means we have no saved credentials for this user
 		// we should return bad request and redirect them to authorisation page
 	}
-	client := c.config.Client(ctx, &creds)
 
-	srv, err := calendar.NewService(context.Background(), option.WithHTTPClient(client))
-	//calendar.NewService(context.Background(), option.WithTokenSource(c.repo))
+	tokenSource := c.config.TokenSource(ctx, &creds)
+	if creds.Expiry.Before(time.Now()) {
+		c.logger.Info("Token is expired, renewing")
+		newToken, err := tokenSource.Token()
+		if err != nil {
+			c.logger.Error("Couldn't get token from old token")
+		}
 
-	c.config.TokenSource(ctx, &creds)
+		err = c.repo.SaveUserCredentials(ctx, userEmail, *newToken)
+		if err != nil {
+			c.logger.Error("Couldn't persist new token")
+		}
+	}
 
+	srv, err := calendar.NewService(ctx, option.WithTokenSource(tokenSource))
 	if err != nil {
-		log.Fatalf("unable to retrieve Calendar client: %v", err)
+		c.logger.Fatal("unable to retrieve Calendar client: %v")
 	}
 
 	eventsClient := evnts.NewEventsClient(srv)
@@ -82,5 +91,6 @@ func (c *calendarService) GetEvents(w http.ResponseWriter, r *http.Request) {
 		c.logger.Error("couldn't marshall events")
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(marshalled)
 }

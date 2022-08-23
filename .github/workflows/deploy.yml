@@ -21,7 +21,7 @@ jobs:
         name: Login to DockerHub
         uses: docker/login-action@v1 
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
+          username: ${{ .DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       -
         name: Build and push
@@ -73,20 +73,21 @@ jobs:
           GITHUB_USERNAME: danni-popova
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ## Traefik labels
-          HOST_LABEL: traefik.http.routers.${{ github.event.repository.name }}.rule=Host(`${{ secrets.DEV_HOSTNAME }}`) && PathPrefix(`/`)
+          HOST_LABEL: traefik.http.routers.${{ github.event.repository.name }}.rule=Host(`todanni.com`) && PathPrefix(`/`)
           MIDDLEWARE_LABEL: traefik.http.routers.${{ github.event.repository.name }}.middlewares=https-redirect@docker
-          TLS_HOST_LABEL: traefik.http.routers.${{ github.event.repository.name }}-tls.rule=Host(`${{ secrets.DEV_HOSTNAME }}`) && PathPrefix(`/api/calendar`)
+          TLS_HOST_LABEL: traefik.http.routers.${{ github.event.repository.name }}-tls.rule=Host(`todanni.com`) && PathPrefix(`/api/calendar`)
           TLS_CERT_LABEL: traefik.http.routers.${{ github.event.repository.name }}-tls.tls.certresolver=letsencrypt
           TLS_LABEL: traefik.http.routers.${{ github.event.repository.name }}-tls.tls=true
           
        with:
-        host: ${{ secrets.DEV_DO_DROPLET_IP }}
+        host: ${{ secrets.DROPLET_IP }}
         username: root
         key: ${{ secrets.ADMIN_SSH_KEY }}
         envs:  HOST_LABEL,CERT_LABEL,TLS_LABEL
         script: |
-          rm .env
-          curl -L -o .env https://raw.githubusercontent.com/${{ github.repository }}/main/build/.env
+          VAULT_ADDR='vault.todanni.com' VAULT_TOKEN=${{ secrets.VAULT_TOKEN }} vault kv get -format yaml -field data app/rmq > .env
+          sed -i 's/: /=/g' .env
+          sed -i 's/"//g' .env
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p "${{ secrets.DOCKER_PASSWORD }}"
           docker pull ${{ github.repository }}:latest
           docker rm -f ${{ github.event.repository.name }} 

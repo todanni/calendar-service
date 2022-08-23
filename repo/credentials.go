@@ -28,18 +28,12 @@ type Credentials struct {
 type CredentialsRepo interface {
 	GetUserCredentials(ctx context.Context, email string) (oauth2.Token, error)
 	SaveUserCredentials(ctx context.Context, email string, credentials oauth2.Token) error
-	Token() (*oauth2.Token, error)
 }
 
 type credsRepo struct {
 	// Depending on what we decide to use,
 	// this will be the object that lets us write to the persistence storage
 	client *vault.Client
-}
-
-func (c *credsRepo) Token() (*oauth2.Token, error) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func NewCredentialsRepo(client *vault.Client) CredentialsRepo {

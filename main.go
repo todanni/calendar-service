@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -16,31 +15,30 @@ import (
 	"github.com/todanni/calendar-service/services"
 )
 
-func main() {
-	b, err := ioutil.ReadFile("credentials.json")
-	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
-	}
+const (
+	VaultAddress = "https://vault.todanni.com"
+)
 
-	router := mux.NewRouter()
+func main() {
 	logger, _ := zap.NewProduction()
 
-	// If modifying these scopes, delete your previously saved token.json.
-	config, err := google.ConfigFromJSON(b, calendar.CalendarReadonlyScope)
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
-	}
-
 	vaultConfig := vault.DefaultConfig()
-	vaultConfig.Address = os.Getenv("VAULT_ADDRESS")
+	vaultConfig.Address = VaultAddress
 
 	vaultClient, err := vault.NewClient(vaultConfig)
 	if err != nil {
 		log.Fatalf("unable to initialize a Vault client: %v", err)
 	}
 	vaultClient.SetToken(os.Getenv("VAULT_TOKEN"))
-	credentialsRepo := repo.NewCredentialsRepo(vaultClient)
 
+	googleCredentials := os.Getenv("GOOGLE_CREDENTIALS")
+	config, err := google.ConfigFromJSON([]byte(googleCredentials), calendar.CalendarReadonlyScope)
+	if err != nil {
+		log.Fatalf("Unable to parse client secret file to config: %v", err)
+	}
+
+	credentialsRepo := repo.NewCredentialsRepo(vaultClient)
+	router := mux.NewRouter()
 	services.NewCredentialsService(credentialsRepo, router, logger, config)
 	services.NewCalendarService(credentialsRepo, router, logger, config)
 
