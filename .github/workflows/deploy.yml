@@ -78,12 +78,13 @@ jobs:
           TLS_HOST_LABEL: traefik.http.routers.${{ github.event.repository.name }}-tls.rule=Host(`todanni.com`) && PathPrefix(`/api/calendar`)
           TLS_CERT_LABEL: traefik.http.routers.${{ github.event.repository.name }}-tls.tls.certresolver=letsencrypt
           TLS_LABEL: traefik.http.routers.${{ github.event.repository.name }}-tls.tls=true
-          
+          ENABLE_LABEL: traefik.enable=true
+
        with:
         host: ${{ secrets.DROPLET_IP }}
         username: root
         key: ${{ secrets.ADMIN_SSH_KEY }}
-        envs:  TLS_HOST_LABEL,TLS_CERT_LABEL,TLS_LABEL
+        envs:  TLS_HOST_LABEL,TLS_CERT_LABEL,TLS_LABEL,ENABLE_LABEL
         script: |
           VAULT_ADDR='https://vault.todanni.com' VAULT_TOKEN=${{ secrets.VAULT_TOKEN }} vault kv get -format yaml -field data  ci/${{ github.event.repository.name }} > .env
           sed -i 's/: /=/g' .env
@@ -91,7 +92,7 @@ jobs:
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p "${{ secrets.DOCKER_PASSWORD }}"
           docker pull ${{ github.repository }}:latest
           docker rm -f ${{ github.event.repository.name }} 
-          docker run -d --name ${{ github.event.repository.name }} --network ${{ secrets.NETWORK }} --label "$TLS_HOST_LABEL" --label "$TLS_LABEL" --label "$TLS_CERT_LABEL" --env-file .env  ${{ github.repository }}
+          docker run -d --name ${{ github.event.repository.name }} --network ${{ secrets.NETWORK }} --label "$TLS_HOST_LABEL" --label "$TLS_LABEL" --label "$TLS_CERT_LABEL" --label "$ENABLE_LABEL" --env-file .env  ${{ github.repository }}
       - 
         name: Send discord failure message
         if: ${{ failure() }}
