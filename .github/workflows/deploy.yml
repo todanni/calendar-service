@@ -86,7 +86,7 @@ jobs:
         key: ${{ secrets.ADMIN_SSH_KEY }}
         envs:  TLS_HOST_LABEL,TLS_CERT_LABEL,TLS_LABEL,ENABLE_LABEL
         script: |
-          VAULT_ADDR='https://vault.todanni.com' VAULT_TOKEN=${{ secrets.VAULT_TOKEN }} vault kv get -format yaml -field data  ci/${{ github.event.repository.name }} > .env
+          VAULT_ADDR='https://vault.todanni.com' VAULT_TOKEN=${{ secrets.CALENDAR_SERVICE_VAULT_KEY }} vault kv get -format yaml -field data  ci/${{ github.event.repository.name }} > .env
           sed -i 's/: /=/g' .env
           sed -i 's/"//g' .env
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p "${{ secrets.DOCKER_PASSWORD }}"
